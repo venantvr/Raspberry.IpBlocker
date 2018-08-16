@@ -56,6 +56,8 @@ def curl2file(url, file):
 	return
 
 directory = '/tmp/'
+sources = directory + 'p2p.sources'
+france = directory + 'fr-aggregated.zone'
 ipblocker = directory + 'france.scratch.' + time.strftime('%Y%m%d') + '.p2p'
 optimized = directory + 'france.optimized.' + time.strftime('%Y%m%d') + '.p2p'
 
@@ -63,9 +65,9 @@ i = 0
 lines = []
 files = []
 
-curl2file('https://www.hack-my-domain.fr/wp-content/uploads/free-tools/p2p.sources', directory + 'p2p.sources')
+curl2file('https://www.hack-my-domain.fr/wp-content/uploads/free-tools/p2p.sources', sources)
 
-with open(directory + 'p2p.sources') as f:
+with open(sources) as f:
 	for line in f:
 		item = line.strip()
 		match = len(item) > 0 and item.startswith('http')
@@ -85,14 +87,14 @@ for file in files:
 
 filtered = dict.fromkeys(lines).keys()
 
-curl2file('http://www.ipdeny.com/ipblocks/data/aggregated/fr-aggregated.zone', directory + 'fr-aggregated.zone')
+curl2file('http://www.ipdeny.com/ipblocks/data/aggregated/fr-aggregated.zone', france)
 
 with open(ipblocker, 'w') as t:
 	for item in filtered:
 		match = re.match(r'^(.*):\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}-\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$', item)
 		if match:
 			t.write(item + '\n')
-	with open(directory + 'fr-aggregated.zone') as f:
+	with open(france) as f:
 		for line in f:
 			item = line.strip()
 			ip = IPNetwork(item)
