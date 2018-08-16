@@ -45,27 +45,27 @@ def long2ip(n):
 	unpacked = struct.pack('!L', n)
 	return socket.inet_ntoa(unpacked)
 
+def curl2file(url, file):
+	c = pycurl.Curl()
+	c.setopt(c.URL, url)
+	with open(file, 'w') as f:
+        	c.setopt(c.WRITEFUNCTION, f.write)
+        	c.perform()
+		f.close()
+	print 'Written ' + url + ' in ' + file
+	return
+
 directory = '/tmp/'
-target = directory + 'ranges.txt'
-ipblocker = directory + 'france.' + time.strftime('%Y%m%d') + '.p2p'
+ipblocker = directory + 'france.scratch.' + time.strftime('%Y%m%d') + '.p2p'
 optimized = directory + 'france.optimized.' + time.strftime('%Y%m%d') + '.p2p'
-# archive = ipblocker + '.gz'
 
 i = 0
 lines = []
 files = []
 
-url = 'https://www.hack-my-domain.fr/wp-content/uploads/free-tools/p2p.sources'
+curl2file('https://www.hack-my-domain.fr/wp-content/uploads/free-tools/p2p.sources', directory + 'p2p.sources')
 
-c = pycurl.Curl()
-c.setopt(c.URL, url)
-target = directory + 'p2p.sources'
-
-with open(target, 'w') as f:
-	c.setopt(c.WRITEFUNCTION, f.write)
-	c.perform()
-
-with open(target) as f:
+with open(directory + 'p2p.sources') as f:
 	for line in f:
 		item = line.strip()
 		match = len(item) > 0 and item.startswith('http')
@@ -73,47 +73,36 @@ with open(target) as f:
 			files.append(item)
 
 for file in files:
-	c = pycurl.Curl()
-	c.setopt(c.URL, file)
-	target = directory + str(i) + '.txt'
-	
-	with open(target, 'w') as f:
-		c.setopt(c.WRITEFUNCTION, f.write)
-		c.perform()
-	
-	with open(target) as f:
+	tmp = directory + str(i) + '.txt'
+	curl2file(file, tmp)
+
+	with open(tmp) as f:
 		for line in f:
 			item = line.strip()
 			lines.append(item)
-			
+
 	i = i + 1
 
 filtered = dict.fromkeys(lines).keys()
 
-url = 'http://www.ipdeny.com/ipblocks/data/aggregated/fr-aggregated.zone'
-
-c = pycurl.Curl()
-c.setopt(c.URL, url)
-
-with open(target, 'w') as f:
-	c.setopt(c.WRITEFUNCTION, f.write)
-	c.perform()
-	f.close()
+curl2file('http://www.ipdeny.com/ipblocks/data/aggregated/fr-aggregated.zone', directory + 'fr-aggregated.zone')
 
 with open(ipblocker, 'w') as t:
 	for item in filtered:
 		match = re.match(r'^(.*):\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}-\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$', item)
 		if match:
 			t.write(item + '\n')
-	with open(target) as f:
+	with open(directory + 'fr-aggregated.zone') as f:
 		for line in f:
 			item = line.strip()
-		ip = IPNetwork(item)
-		first = str(ip[0])
-		last = str(ip[-1])
-		t.write('France:' + first + '-' + last + '\n')
+			ip = IPNetwork(item)
+			first = str(ip[0])
+			last = str(ip[-1])
+			t.write('France:' + first + '-' + last + '\n')
 		f.close()
 	t.close()
+
+# sys.exit()
 
 consolidated = []
 
@@ -130,7 +119,7 @@ merged = merge_overlapping(consolidated)
 
 with open(optimized, 'w') as t:
 	for item in merged:
-		t.write('Consolidated:' + long2ip(item[0]) + '-' + long2ip(item[1]) + '\n')
+		t.write('Optimized:' + long2ip(item[0]) + '-' + long2ip(item[1]) + '\n')
 	t.close()
 
 gz_file(ipblocker)
