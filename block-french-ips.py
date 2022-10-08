@@ -52,7 +52,6 @@ def curl2file(url: str, file: str):
     with open(file, 'w') as f:
         c.setopt(c.WRITEFUNCTION, f.write)
         c.perform()
-        f.close()
     print('Written {0} in {1}'.format(url, file))
     return
 
@@ -103,10 +102,6 @@ with open(ipblocker, 'w') as t:
             first = str(ip[0])
             last = str(ip[-1])
             t.write('France:{0}-{1}\n'.format(first, last))
-        f.close()
-    t.close()
-
-# sys.exit()
 
 consolidated = []
 
@@ -117,14 +112,12 @@ with open(ipblocker) as f:
         ipfrom = match.group(2)
         ipto = match.group(3)
         consolidated.append((ip2long(ipfrom), ip2long(ipto)))
-    f.close()
 
 merged = merge_overlapping(consolidated)
 
 with open(optimized, 'w') as t:
     for item in merged:
         t.write('Optimized:{0}-{1}\n'.format(long2ip(item[0]), long2ip(item[1])))
-    t.close()
 
 gz_file(ipblocker)
 gz_file(optimized)
